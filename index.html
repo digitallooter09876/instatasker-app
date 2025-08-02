@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InstaTasker</title>
+  <script src="https://js.monetag.com/ads.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; color: #333; }
+    header { background: #007bff; color: #fff; padding: 1rem; text-align: center; }
+    nav { display: flex; justify-content: space-around; background: #ddd; padding: 0.5rem; }
+    nav button { flex: 1; padding: 0.7rem; border: none; background: #ccc; font-weight: bold; cursor: pointer; }
+    nav button.active { background: #007bff; color: white; }
+    section { display: none; padding: 1rem; }
+    section.active { display: block; }
+    .token { font-size: 1.5rem; font-weight: bold; color: #28a745; }
+    button.task-btn { background: #007bff; color: white; padding: 0.7rem 1.5rem; border: none; margin-top: 1rem; font-size: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>InstaTasker</h1>
+    <p>Earn Bananas31 Tokens</p>
+  </header>
+
+  <nav>
+    <button onclick="showTab('tasks')" id="tab-tasks" class="active">Tasks</button>
+    <button onclick="showTab('refer')" id="tab-refer">Refer & Earn</button>
+    <button onclick="showTab('wallet')" id="tab-wallet">Wallet</button>
+  </nav>
+
+  <section id="tasks" class="active">
+    <p>Complete tasks and earn 3 Bananas31 Tokens each.</p>
+    <p><strong>Daily Limit:</strong> 30 Tasks</p>
+    <p><strong>Completed Today:</strong> <span id="taskCount">0</span>/30</p>
+    <button class="task-btn" onclick="completeTask()">Do Task</button>
+    <button class="task-btn" style="background:#28a745;" onclick="watchBonusAd()">Watch Bonus Ad</button>
+  </section>
+
+  <section id="refer">
+    <p>Invite friends and earn 10 Bananas31 Tokens per signup.</p>
+    <input type="text" id="refLink" value="https://instatasker.vercel.app/?ref=YOURCODE" readonly style="width: 100%; padding: 0.5rem;">
+    <button class="task-btn" onclick="copyRef()">Copy Referral Link</button>
+  </section>
+
+  <section id="wallet">
+    <p>Your Bananas31 Token Balance:</p>
+    <p class="token"><span id="balance">0</span> Tokens</p>
+    <p>Minimum withdrawal: 650 Tokens</p>
+    <button class="task-btn" style="background:#6c757d;" onclick="withdraw()">Withdraw</button>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    // WebApp fallback
+    if (!(window.Telegram && window.Telegram.WebApp)) {
+      console.warn("Telegram WebApp not found. Using fallback.");
+      window.Telegram = {
+        WebApp: {
+          initDataUnsafe: { user: { id: "test_user" } },
+          ready: () => console.log("Telegram WebApp Ready (fallback)")
+        }
+      };
+    }
+
+    Telegram.WebApp.ready();
+    startApp();
+
+    function startApp() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyBu5gYrZj--4oUen1yT09QZWibf0VTizu8",
+        authDomain: "instatasker-838da.firebaseapp.com",
+        projectId: "instatasker-838da",
+        storageBucket: "instatasker-838da.appspot.com",
+        messagingSenderId: "77416904419",
+        appId: "1:77416904419:web:01bf4a0b3915c44c0337d6"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const userId = Telegram.WebApp.initDataUnsafe?.user?.id?.toString() || "guest";
+      const balanceEl = document.getElementById("balance");
+      const taskCountEl = document.getElementById("taskCount");
+
+      let balance = 0;
+      let taskDone = 0;
+      const dailyLimit = 30;
+
+      async function loadUserData() {
+        const ref = doc(db, "users", userId);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
+          balance = data.balance || 0;
+          taskDone = data.taskDone || 0;
+        }
+        updateUI();
+      }
+
+      async function saveUserData() {
+        const ref = doc(db, "users", userId);
+        await setDoc(ref, { balance, taskDone });
+      }
+
+      function updateUI() {
+        balanceEl.innerText = balance;
+        taskCountEl.innerText = taskDone;
+      }
+
+      window.completeTask = async function () {
+        if (taskDone >= dailyLimit) {
+          alert("You reached the daily limit!");
+          return;
+        }
+        if (typeof show_9656417 !== "function") {
+          alert("Ad not ready yet.");
+          return;
+        }
+        show_9656417().then(async () => {
+          taskDone++;
+          balance += 3;
+          updateUI();
+          await saveUserData();
+          alert("You earned 3 Bananas31 Tokens!");
+        }).catch(() => {
+          alert("Ad failed or skipped.");
+        });
+      };
+
+      window.watchBonusAd = async function () {
+        if (typeof show_9656417 !== "function") {
+          alert("Bonus ad not ready.");
+          return;
+        }
+        show_9656417('pop').then(async () => {
+          balance += 1;
+          updateUI();
+          await saveUserData();
+          alert("You earned 1 bonus token!");
+        }).catch(() => {
+          alert("Bonus ad failed.");
+        });
+      };
+
+      window.showTab = function (tab) {
+        document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+        document.querySelectorAll("nav button").forEach(btn => btn.classList.remove("active"));
+        document.getElementById(tab).classList.add("active");
+        document.getElementById("tab-" + tab).classList.add("active");
+      };
+
+      window.copyRef = function () {
+        const input = document.getElementById("refLink");
+        input.select();
+        input.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        alert("Referral link copied!");
+      };
+
+      window.withdraw = function () {
+        if (balance >= 650) {
+          alert("Withdrawal requested!");
+        } else {
+          alert("You need 650 tokens to withdraw.");
+        }
+      };
+
+      // Monetag in-app auto interstitial
+      show_9656417({
+        type: 'inApp',
+        inAppSettings: {
+          frequency: 2,
+          capping: 0.1,
+          interval: 30,
+          timeout: 5,
+          everyPage: false
+        }
+      });
+
+      loadUserData();
+    }
+  </script>
+</body>
+</html>
